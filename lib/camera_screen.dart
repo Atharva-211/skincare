@@ -1,8 +1,8 @@
-
 // camera_screen.dart
 import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:camera_app/verify_image.dart';
 import 'package:flutter/material.dart';
 
 class TakePictureScreen extends StatefulWidget {
@@ -81,7 +81,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                           print(e);
                         }
                       },
-                      child: Icon(Icons.camera_alt, color: Colors.black, size: 30),
+                      child:
+                          Icon(Icons.camera_alt, color: Colors.black, size: 30),
                     ),
                   ),
                 ),
@@ -91,37 +92,6 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             return Center(child: CircularProgressIndicator());
           }
         },
-      ),
-    );
-  }
-}
-
-class DisplayPictureScreen extends StatelessWidget {
-  final String imagePath;
-
-  DisplayPictureScreen({required this.imagePath});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Review Picture'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.check),
-            onPressed: () {
-              // TODO: Add logic to process the image
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
-      body: Container(
-        color: Colors.black,
-        child: Center(
-          child: Image.file(File(imagePath)),
-        ),
       ),
     );
   }

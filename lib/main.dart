@@ -1,58 +1,51 @@
-// main.dart
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:fl_chart/fl_chart.dart'; // Import for RadarEntry
+import 'frontend/pages/mainDashboard.dart';
 import 'camera_screen.dart';
-import 'skin_care_analysis_page.dart';
-import 'custom_bottom_navigation_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   final cameras = await availableCameras();
   final frontCamera = cameras.firstWhere(
-    (camera) => camera.lensDirection == CameraLensDirection.front,
+        (camera) => camera.lensDirection == CameraLensDirection.front,
     orElse: () => cameras.first,
   );
 
-  runApp(
-    MaterialApp(
-      theme: ThemeData.dark(),
-      home: MainScreen(camera: frontCamera),
-    ),
-  );
+  // Dummy radar data for testing
+  final radarData = <RadarEntry>[
+    RadarEntry(value: 0),
+    RadarEntry(value: 0),
+    RadarEntry(value: 0),
+    RadarEntry(value: 0),
+    RadarEntry(value: 0),
+    RadarEntry(value: 0),
+    RadarEntry(value: 0),
+    RadarEntry(value: 0),
+    RadarEntry(value: 0),
+    RadarEntry(value: 0),
+  ];
+
+  runApp(MyApp(camera: frontCamera, radarData: radarData));
 }
 
-class MainScreen extends StatefulWidget {
+class MyApp extends StatelessWidget {
   final CameraDescription camera;
+  final List<RadarEntry> radarData;
 
-  MainScreen({required this.camera});
-
-  @override
-  _MainScreenState createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
+  const MyApp({super.key, required this.camera, required this.radarData});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SkinCareAnalysisPage(camera: widget.camera),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        onCameraPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TakePictureScreen(camera: widget.camera),
-            ),
-          );
-        },
+    return MaterialApp(
+      title: 'Skin Care App',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
       ),
+      home: SkinCareApp(camera: camera, radarData: radarData),
     );
   }
 }

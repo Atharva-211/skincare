@@ -1,5 +1,6 @@
+// ignore_for_file: avoid_print
+
 import 'dart:async';
-import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'verify_image.dart';
@@ -13,7 +14,7 @@ enum PhotoStep { front, leftProfile, rightProfile }
 class TakePictureScreen extends StatefulWidget {
   final CameraDescription camera;
 
-  TakePictureScreen({required this.camera});
+  const TakePictureScreen({super.key, required this.camera});
 
   @override
   TakePictureScreenState createState() => TakePictureScreenState();

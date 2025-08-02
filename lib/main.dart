@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:fl_chart/fl_chart.dart'; // Import for RadarEntry
 import 'frontend/pages/mainDashboard.dart';
-import 'camera_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

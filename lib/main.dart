@@ -1,7 +1,7 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:fl_chart/fl_chart.dart'; // Import for RadarEntry
-import 'frontend/pages/mainDashboard.dart';
+import 'screens/dashboard_screen.dart';  // Correct path
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,28 +12,13 @@ void main() async {
     orElse: () => cameras.first,
   );
 
-  // Dummy radar data for testing
-  final radarData = <RadarEntry>[
-    RadarEntry(value: 0),
-    RadarEntry(value: 0),
-    RadarEntry(value: 0),
-    RadarEntry(value: 0),
-    RadarEntry(value: 0),
-    RadarEntry(value: 0),
-    RadarEntry(value: 0),
-    RadarEntry(value: 0),
-    RadarEntry(value: 0),
-    RadarEntry(value: 0),
-  ];
-
-  runApp(MyApp(camera: frontCamera, radarData: radarData));
+  runApp(MyApp(camera: frontCamera));
 }
 
 class MyApp extends StatelessWidget {
   final CameraDescription camera;
-  final List<RadarEntry> radarData;
 
-  const MyApp({super.key, required this.camera, required this.radarData});
+  const MyApp({super.key, required this.camera});
 
   @override
   Widget build(BuildContext context) {
@@ -41,10 +26,10 @@ class MyApp extends StatelessWidget {
       title: 'Skin Care App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFBDF4EA)),
         useMaterial3: true,
       ),
-      home: SkinCareApp(camera: camera, radarData: radarData),
+      home: DashboardScreen(camera: camera),
     );
   }
 }

@@ -1,9 +1,13 @@
+// lib/verify_image.dart
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'dart:typed_data';
-import 'camera_screen.dart';
+import 'models/photo_step.dart';  // ✅ Import shared enum
+
+// Import the PhotoStep enum from camera_screen
+// enum PhotoStep { center, left, right }
 
 class DisplayPictureScreen extends StatefulWidget {
   final String imagePath;
@@ -11,7 +15,7 @@ class DisplayPictureScreen extends StatefulWidget {
 
   DisplayPictureScreen({
     required this.imagePath,
-    required this.photoStep
+    required this.photoStep,
   });
 
   @override
@@ -31,11 +35,11 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
 
   String _getPhotoTypeTitle() {
     switch (widget.photoStep) {
-      case PhotoStep.front:
-        return 'Front Face Photo';
-      case PhotoStep.leftProfile:
+      case PhotoStep.center:
+        return 'Center Face Photo';
+      case PhotoStep.left:
         return 'Left Profile Photo';
-      case PhotoStep.rightProfile:
+      case PhotoStep.right:
         return 'Right Profile Photo';
     }
   }
@@ -44,7 +48,6 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
     try {
       File imageFile = File(widget.imagePath);
       final InputImage inputImage = InputImage.fromFile(imageFile);
-
       final faceDetector = FaceDetector(
         options: FaceDetectorOptions(
           enableLandmarks: true,
@@ -69,13 +72,13 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
       bool validationResult = false;
 
       switch (widget.photoStep) {
-        case PhotoStep.front:
-          validationResult = await _validateFrontFace(face, imageFile);
+        case PhotoStep.center:
+          validationResult = await _validateCenterFace(face, imageFile);
           break;
-        case PhotoStep.leftProfile:
+        case PhotoStep.left:
           validationResult = await _validateLeftProfile(face, imageFile);
           break;
-        case PhotoStep.rightProfile:
+        case PhotoStep.right:
           validationResult = await _validateRightProfile(face, imageFile);
           break;
       }
@@ -84,7 +87,6 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
         _isValidated = validationResult;
         _isProcessing = false;
       });
-
     } catch (e) {
       setState(() {
         _validationMessage = "Error processing image: $e";
@@ -94,7 +96,7 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
     }
   }
 
-  Future<bool> _validateFrontFace(Face face, File imageFile) async {
+  Future<bool> _validateCenterFace(Face face, File imageFile) async {
     // Validate both eyes are visible
     bool bothEyesVisible = face.landmarks[FaceLandmarkType.leftEye] != null &&
         face.landmarks[FaceLandmarkType.rightEye] != null;
@@ -106,20 +108,7 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
       return false;
     }
 
-    // Ensure nose is centered (front-facing validation)
-    if (face.landmarks[FaceLandmarkType.noseBase] != null) {
-      double noseX = face.landmarks[FaceLandmarkType.noseBase]!.position.x.toDouble();
-      double imageCenterX = MediaQuery.of(context).size.width / 2;
-
-      if ((noseX - imageCenterX).abs() > 50) {
-        setState(() {
-          _validationMessage = "Please center your face properly.";
-        });
-        return false;
-      }
-    }
-
-    // Check head pose for front-facing
+    // Check head pose for center-facing
     if (face.headEulerAngleY != null && face.headEulerAngleY!.abs() > 15) {
       setState(() {
         _validationMessage = "Please face the camera directly. Turn your head straight.";
@@ -127,55 +116,22 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
       return false;
     }
 
-    // Check lighting conditions
-    bool isWellLit = await _checkFaceBrightness(imageFile, face.boundingBox);
-    if (!isWellLit) {
-      setState(() {
-        _validationMessage = "Face is too dark. Improve lighting and try again.";
-      });
-      return false;
-    }
-
     setState(() {
-      _validationMessage = "Front face photo validated successfully!";
+      _validationMessage = "Center face photo validated successfully!";
     });
     return true;
   }
 
   Future<bool> _validateLeftProfile(Face face, File imageFile) async {
-    // For left profile, we expect the right eye to be more visible than the left
-    bool rightEyeVisible = face.landmarks[FaceLandmarkType.rightEye] != null;
-
-    if (!rightEyeVisible) {
-      setState(() {
-        _validationMessage = "Right eye not clearly visible. Please show your left profile more clearly.";
-      });
-      return false;
-    }
-
-    // Check head pose - should be turned significantly to the left (negative Y angle)
+    // Check head pose - should be turned to the left (negative Y angle)
     if (face.headEulerAngleY != null) {
       double headAngle = face.headEulerAngleY!;
       if (headAngle > -20 || headAngle < -70) {
         setState(() {
-          _validationMessage = "Please turn your head more to the left to show your profile.";
+          _validationMessage = "Please turn your head more to the left.";
         });
         return false;
       }
-    } else {
-      setState(() {
-        _validationMessage = "Cannot detect head orientation. Please ensure your profile is clearly visible.";
-      });
-      return false;
-    }
-
-    // Check lighting conditions
-    bool isWellLit = await _checkFaceBrightness(imageFile, face.boundingBox);
-    if (!isWellLit) {
-      setState(() {
-        _validationMessage = "Face is too dark. Improve lighting and try again.";
-      });
-      return false;
     }
 
     setState(() {
@@ -185,89 +141,21 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
   }
 
   Future<bool> _validateRightProfile(Face face, File imageFile) async {
-    // For right profile, we expect the left eye to be more visible than the right
-    bool leftEyeVisible = face.landmarks[FaceLandmarkType.leftEye] != null;
-
-    if (!leftEyeVisible) {
-      setState(() {
-        _validationMessage = "Left eye not clearly visible. Please show your right profile more clearly.";
-      });
-      return false;
-    }
-
-    // Check head pose - should be turned significantly to the right (positive Y angle)
+    // Check head pose - should be turned to the right (positive Y angle)
     if (face.headEulerAngleY != null) {
       double headAngle = face.headEulerAngleY!;
       if (headAngle < 20 || headAngle > 70) {
         setState(() {
-          _validationMessage = "Please turn your head more to the right to show your profile.";
+          _validationMessage = "Please turn your head more to the right.";
         });
         return false;
       }
-    } else {
-      setState(() {
-        _validationMessage = "Cannot detect head orientation. Please ensure your profile is clearly visible.";
-      });
-      return false;
-    }
-
-    // Check lighting conditions
-    bool isWellLit = await _checkFaceBrightness(imageFile, face.boundingBox);
-    if (!isWellLit) {
-      setState(() {
-        _validationMessage = "Face is too dark. Improve lighting and try again.";
-      });
-      return false;
     }
 
     setState(() {
       _validationMessage = "Right profile photo validated successfully!";
     });
     return true;
-  }
-
-  Future<bool> _checkFaceBrightness(File imageFile, Rect faceBox) async {
-    try {
-      final Uint8List bytes = await imageFile.readAsBytes();
-      ui.Codec codec = await ui.instantiateImageCodec(bytes);
-      ui.FrameInfo frameInfo = await codec.getNextFrame();
-      ui.Image image = frameInfo.image;
-
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
-      if (byteData == null) return false;
-
-      Uint8List imgBytes = byteData.buffer.asUint8List();
-      int totalBrightness = 0;
-      int pixelCount = 0;
-
-      int bytesPerPixel = 4; // RGBA format
-
-      for (int y = faceBox.top.toInt(); y < faceBox.bottom.toInt(); y++) {
-        for (int x = faceBox.left.toInt(); x < faceBox.right.toInt(); x++) {
-          int pixelIndex = (y * image.width + x) * bytesPerPixel;
-
-          if (pixelIndex + 2 >= imgBytes.length) continue;
-
-          int red = imgBytes[pixelIndex];
-          int green = imgBytes[pixelIndex + 1];
-          int blue = imgBytes[pixelIndex + 2];
-
-          int brightness = (red + green + blue) ~/ 3;
-          totalBrightness += brightness;
-          pixelCount++;
-        }
-      }
-
-      if (pixelCount == 0) return false; // Prevent division by zero
-
-      double avgBrightness = totalBrightness / pixelCount;
-      print("Average brightness: $avgBrightness");
-
-      return avgBrightness > 60; // Slightly lower threshold for profile photos
-    } catch (e) {
-      print("Error processing brightness: $e");
-      return false;
-    }
   }
 
   void _handleAccept() {

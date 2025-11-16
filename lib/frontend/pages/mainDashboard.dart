@@ -2,14 +2,18 @@
 
 // ignore_for_file: use_super_parameters, prefer_const_constructors_in_immutables
 
+// lib/frontend/pages/mainDashboard.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:camera/camera.dart';
-import '../../camera_screen.dart';
+import '../../screens/camera_screen.dart';  // FIX: Updated path
 import '../../models/product.dart';
 import '../../services/product_service.dart';
 import '../../widgets/product_card.dart';
+
+// ... rest of your existing mainDashboard code
+
 
 class SkinCareApp extends StatelessWidget {
   final CameraDescription camera;
@@ -207,7 +211,7 @@ class _SkinCareHomePageState extends State<SkinCareHomePage> {
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                             child: Text(
-                              categoryIndex == 0 ? 'Dove Products' : 'Cetaphil Products',
+                              categoryIndex == 0 ? 'Cetaphil Products' : 'Minimalist Salicylic Acid Face Serum',
                               style: GoogleFonts.itim(fontSize: 16, color: Colors.black),
                             ),
                           ),
@@ -297,7 +301,7 @@ class _SkinCareHomePageState extends State<SkinCareHomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => TakePictureScreen(camera: widget.camera),
+                    builder: (context) => CameraScreen(camera: widget.camera),
                   ),
                 );
               },

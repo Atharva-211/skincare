@@ -1,4 +1,4 @@
-// widgets/product_card.dart
+// lib/widgets/product_card.dart
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 
@@ -40,25 +40,25 @@ class ProductCard extends StatelessWidget {
               borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
               child: product.imageUrl.isNotEmpty
                   ? Image.network(
-                      product.imageUrl,
-                      fit: BoxFit.contain,
-                      height: 120,
-                      width: double.infinity,
-                      errorBuilder: (context, error, stackTrace) {
-                        return _buildPlaceholderImage();
-                      },
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                                : null,
-                          ),
-                        );
-                      },
-                    )
+                product.imageUrl,
+                fit: BoxFit.contain,
+                height: 120,
+                width: double.infinity,
+                errorBuilder: (context, error, stackTrace) {
+                  return _buildPlaceholderImage();
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
+              )
                   : _buildPlaceholderImage(),
             ),
           ),
@@ -174,6 +174,7 @@ class ProductCard extends StatelessWidget {
     );
   }
 
+  // Helper method to build placeholder when image fails to load
   Widget _buildPlaceholderImage() {
     return Container(
       height: 120,

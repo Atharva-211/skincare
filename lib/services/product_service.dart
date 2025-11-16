@@ -9,8 +9,8 @@ class ProductService {
 
   // Predefined product list
   static const List<String> _productList = [
-    'Dove',
-    'Cetaphil',
+    'cetaphil',
+    'Minimalist Salicylic Acid Face Serum',
   ];
 
   // Fetch products using SerpAPI
@@ -91,8 +91,8 @@ class ProductService {
     final lowerTitle = title.toLowerCase();
     final lowerQuery = searchQuery.toLowerCase();
 
-    if (lowerTitle.contains('dove') || lowerQuery.contains('dove')) return 'Dove';
-    if (lowerTitle.contains('cetaphil') || lowerQuery.contains('cetaphil')) return 'Cetaphil';
+    if (lowerTitle.contains('cetaphil') || lowerQuery.contains('cetaphil')) return 'cetaphil';
+    if (lowerTitle.contains('Minimalist Salicylic Acid Face Serum') || lowerQuery.contains('Minimalist Salicylic Acid Face Serum')) return 'Minimalist Salicylic Acid Face Serum';
 
     // Try to extract brand from title
     final words = title.split(' ');

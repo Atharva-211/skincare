@@ -1,35 +1,42 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'screens/dashboard_screen.dart';  // Correct path
+import 'config/supabase_config.dart';
+import 'screens/splash_screen.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final cameras = await availableCameras();
-  final frontCamera = cameras.firstWhere(
-        (camera) => camera.lensDirection == CameraLensDirection.front,
-    orElse: () => cameras.first,
-  );
+  // Initialize Supabase
+  await SupabaseConfig.initialize();
 
-  runApp(MyApp(camera: frontCamera));
+  // Get available cameras
+  final cameras = await availableCameras();
+  final firstCamera = cameras.first;
+
+  runApp(MyApp(camera: firstCamera));
 }
 
 class MyApp extends StatelessWidget {
   final CameraDescription camera;
 
-  const MyApp({super.key, required this.camera});
+  const MyApp({Key? key, required this.camera}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Skin Care App',
+      title: 'Acne Detection App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFBDF4EA)),
+        primaryColor: Color(0xFFBDF4EA),
+        scaffoldBackgroundColor: Color(0xFFD9FBFF),
+        colorScheme: ColorScheme.light(
+          primary: Color(0xFFBDF4EA),
+          secondary: Color(0xFF6FDFFF),
+        ),
         useMaterial3: true,
       ),
-      home: DashboardScreen(camera: camera),
+      home: SplashScreen(camera: camera),
     );
   }
 }

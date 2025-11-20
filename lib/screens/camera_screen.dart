@@ -9,7 +9,7 @@ import '../services/detection_service.dart';
 import '../models/analysis_result.dart';
 import '../models/photo_step.dart';
 import '../verify_image.dart';
-import 'results_screen.dart';
+import 'results/results_screen.dart';
 
 class CameraScreen extends StatefulWidget {
   final CameraDescription camera;

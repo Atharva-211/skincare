@@ -12,22 +12,39 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  # Existing
   camera: ^0.10.5
   image: ^4.5.3
   google_mlkit_face_detection: ^0.11.0
-  cupertino_icons: ^1.0.8
-  google_fonts: ^6.1.0
-  fl_chart: ^0.65.0
+  google_fonts: ^6.2.0
   http: ^1.1.0
-  image_picker: ^1.0.7  # ✅ Add this
+  image_picker: ^1.0.7
+  fl_chart: ^0.68.0
+
+  # New - Authentication & Database
+  supabase_flutter: ^2.5.0
+  shared_preferences: ^2.2.3
+
+  # New - UI Components
+  smooth_page_indicator: ^1.1.0
+  intl: ^0.19.0
+
 
 
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^5.0.0
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+
 
 flutter:
   uses-material-design: true
@@ -37,6 +54,8 @@ flutter:
     - assets/haarcascade_frontalface_default.xml
     - Assets/face.png # Added for the avatar image referenced in your dashboard
     - Assets/product.png
+    - assets/icon/
+    - assets/images/splash.png
 
   # Optional: Add custom fonts if needed
   # fonts:

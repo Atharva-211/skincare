@@ -1,8 +1,10 @@
-// models/product.dart
+// lib/models/product.dart
+
 class Product {
   final String id;
   final String name;
   final String brand;
+  final String category; // ✅ Added category field
   final String imageUrl;
   final double price;
   final String seller;
@@ -16,12 +18,13 @@ class Product {
     required this.id,
     required this.name,
     required this.brand,
-    required this.imageUrl,
-    required this.price,
-    required this.seller,
+    required this.category, // ✅ Added to constructor
+    this.imageUrl = '', // ✅ Made optional with default
+    this.price = 0.0, // ✅ Made optional with default
+    this.seller = '', // ✅ Made optional with default
     this.rating = 0.0,
     this.reviews = 0,
-    required this.productUrl,
+    this.productUrl = '', // ✅ Made optional with default
     this.isAvailable = true,
     this.originalPrice,
   });
@@ -31,6 +34,7 @@ class Product {
       id: json['id']?.toString() ?? '',
       name: json['name'] ?? '',
       brand: json['brand'] ?? '',
+      category: json['category'] ?? '', // ✅ Added category
       imageUrl: json['imageUrl'] ?? '',
       price: _parsePrice(json['price']),
       seller: json['seller'] ?? '',
@@ -38,7 +42,9 @@ class Product {
       reviews: json['reviews'] ?? 0,
       productUrl: json['productUrl'] ?? '',
       isAvailable: json['isAvailable'] ?? true,
-      originalPrice: json['originalPrice'] != null ? _parsePrice(json['originalPrice']) : null,
+      originalPrice: json['originalPrice'] != null
+          ? _parsePrice(json['originalPrice'])
+          : null,
     );
   }
 

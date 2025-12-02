@@ -1,138 +1,87 @@
 // lib/services/product_recommendation_service.dart
+import '../config/supabase_config.dart';
 import '../models/scan_history.dart';
-import '../models/product.dart';
-import 'product_service.dart';
+import '../data/product_recommendations_data.dart';
 
 class ProductRecommendationService {
-  // Product name mappings based on acne level
-  static Map<String, List<String>> _getProductQueries(String acneLevel) {
-    switch (acneLevel) {
-      case 'high':
-        return {
-          'Facewash': [
-            'CeraVe Acne Foaming Cream Cleanser',
-            'Neutrogena Rapid Clear Stubborn Acne Cleanser',
-            'The Derma Co Salicylic Acid Face Wash',
-          ],
-          'Serum': [
-            'The Ordinary Niacinamide 10% Zinc 1%',
-            'Minimalist Niacinamide Face Serum',
-            'Paula\'s Choice BHA Liquid Exfoliant',
-          ],
-          'Moisturiser': [
-            'Cetaphil PRO Oil Control Moisturizer',
-            'Neutrogena Oil-Free Moisture',
-          ],
-          'Sunscreen': [
-            'La Roche-Posay Anthelios Oil Control',
-            'Neutrogena Ultra Sheer Dry-Touch Sunscreen',
-          ],
-        };
-      case 'medium':
-        return {
-          'Facewash': [
-            'Cetaphil Gentle Foaming Cleanser',
-            'Plum Green Tea Face Wash',
-          ],
-          'Serum': [
-            'Minimalist Alpha Arbutin Serum',
-            'The Ordinary AHA BHA Peeling Solution',
-          ],
-          'Moisturiser': [
-            'CeraVe Moisturizing Lotion',
-            'Minimalist Sepicalm Oat Moisturizer',
-          ],
-          'Sunscreen': [
-            'Minimalist SPF 50 Sunscreen',
-            'Neutrogena Hydro Boost Water Gel',
-          ],
-        };
-      case 'low':
-      default:
-        return {
-          'Facewash': [
-            'CeraVe Hydrating Cleanser',
-            'Simple Refreshing Facial Wash',
-          ],
-          'Serum': [
-            'The Ordinary Hyaluronic Acid 2% B5',
-            'Minimalist Vitamin C Face Serum',
-          ],
-          'Moisturiser': [
-            'CeraVe Daily Moisturizing Lotion',
-            'Neutrogena Hydro Boost Gel-Cream',
-          ],
-          'Sunscreen': [
-            'Cetaphil Daily Facial Moisturizer SPF 50',
-            'Neutrogena Beach Defense SPF 50',
-          ],
-        };
-    }
+  // Get acne level based on scan history
+  static String getAcneLevel(ScanHistory? scan) {
+    if (scan == null) return 'low';
+
+    int totalHigh = scan.totalHigh;
+    int totalMedium = scan.totalMedium;
+
+    if (totalHigh >= 10) return 'high';
+    if (totalHigh >= 5 || totalMedium >= 15) return 'medium';
+    return 'low';
   }
 
-  static String getAcneLevel(ScanHistory? latestScan) {
-    if (latestScan == null) return 'low';
-
-    if (latestScan.totalHigh > latestScan.totalMedium &&
-        latestScan.totalHigh > latestScan.totalLow) {
-      return 'high';
-    } else if (latestScan.totalMedium >= latestScan.totalLow) {
-      return 'medium';
-    } else {
-      return 'low';
-    }
-  }
-
-  static Future<Map<String, List<Product>>> getRecommendations(String acneLevel) async {
-    final queries = _getProductQueries(acneLevel);
-    Map<String, List<Product>> recommendations = {};
-
-    for (var category in queries.entries) {
-      List<Product> categoryProducts = [];
-
-      for (var productName in category.value) {
-        try {
-          final products = await ProductService.searchProducts(productName);
-          if (products.isNotEmpty) {
-            categoryProducts.addAll(products.take(2)); // Take 2 products per query
-          }
-        } catch (e) {
-          print('Error fetching $productName: $e');
-        }
+  // Get product recommendations based on user profile
+  static Future<Map<String, List<String>>> getRecommendations() async {
+    try {
+      final user = SupabaseConfig.client.auth.currentUser;
+      if (user == null) {
+        // Return default recommendations for Normal skin
+        return ProductRecommendationsData.getRecommendations('Normal', []);
       }
 
-      if (categoryProducts.isNotEmpty) {
-        recommendations[category.key] = categoryProducts;
-      }
-    }
+      // Get user profile
+      final profileData = await SupabaseConfig.client
+          .from('user_profiles')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
 
-    return recommendations;
+      if (profileData == null) {
+        // Return default recommendations for Normal skin
+        return ProductRecommendationsData.getRecommendations('Normal', []);
+      }
+
+      // Extract skin type (default to 'Normal' if not provided)
+      String skinType = profileData['skin_type'] ?? 'Normal';
+
+      // Extract sensitivities from known_allergies
+      List<String> sensitivities = [];
+      if (profileData['known_allergies'] != null) {
+        List<dynamic> allergies = profileData['known_allergies'];
+        sensitivities = allergies.cast<String>();
+      }
+
+      // Get recommendations
+      return ProductRecommendationsData.getRecommendations(skinType, sensitivities);
+    } catch (e) {
+      print('Error getting recommendations: $e');
+      // Return default recommendations for Normal skin on error
+      return ProductRecommendationsData.getRecommendations('Normal', []);
+    }
   }
 
-  static List<String> getAvoidIngredients(String acneLevel) {
-    switch (acneLevel) {
-      case 'high':
-        return [
-          'Heavy oils (coconut, palm)',
-          'Comedogenic ingredients',
-          'Alcohol-based products',
-          'Fragrance',
-          'Harsh physical exfoliants'
-        ];
-      case 'medium':
-        return [
-          'Heavy moisturizers',
-          'Silicones',
-          'Mineral oil',
-          'Strong fragrances'
-        ];
-      case 'low':
-      default:
-        return [
-          'Over-exfoliation',
-          'Strong acids',
-          'Heavy fragrances'
-        ];
+  // Get ingredients to avoid based on user sensitivities
+  static Future<List<String>> getAvoidIngredients() async {
+    try {
+      final user = SupabaseConfig.client.auth.currentUser;
+      if (user == null) return [];
+
+      // Get user profile
+      final profileData = await SupabaseConfig.client
+          .from('user_profiles')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (profileData == null) return [];
+
+      // Extract sensitivities
+      List<String> sensitivities = [];
+      if (profileData['known_allergies'] != null) {
+        List<dynamic> allergies = profileData['known_allergies'];
+        sensitivities = allergies.cast<String>();
+      }
+
+      return ProductRecommendationsData.getAvoidIngredients(sensitivities);
+    } catch (e) {
+      print('Error getting avoid ingredients: $e');
+      return [];
     }
   }
 }

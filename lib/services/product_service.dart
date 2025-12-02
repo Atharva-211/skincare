@@ -17,6 +17,7 @@ class ProductService {
   static Future<List<Product>> searchProducts(String query) async {
     try {
       print('Searching for: $query');
+
       final response = await http.get(
         Uri.parse(_baseUrl).replace(queryParameters: {
           'engine': 'google_shopping',
@@ -32,7 +33,7 @@ class ProductService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final List<dynamic> shoppingResults = data['shopping_results'] ?? [];
+        final List shoppingResults = data['shopping_results'] ?? [];
 
         print('Found ${shoppingResults.length} results');
 
@@ -46,6 +47,7 @@ class ProductService {
             id: (item['position'] ?? i).toString(),
             name: item['title'] ?? 'Unknown Product',
             brand: _extractBrand(item['title'] ?? '', query),
+            category: _extractCategory(query), // ✅ Added category extraction
             imageUrl: item['thumbnail'] ?? '',
             price: _parsePrice(item['extracted_price']),
             seller: item['source'] ?? 'Unknown Seller',
@@ -87,14 +89,46 @@ class ProductService {
     return allProducts;
   }
 
+  // ✅ New method to extract category from search query
+  static String _extractCategory(String query) {
+    final lowerQuery = query.toLowerCase();
+
+    // Check for common product categories
+    if (lowerQuery.contains('cleanser') || lowerQuery.contains('face wash') || lowerQuery.contains('facewash')) {
+      return 'Facewash';
+    }
+    if (lowerQuery.contains('moisturizer') || lowerQuery.contains('cream')) {
+      return 'Moisturizer';
+    }
+    if (lowerQuery.contains('serum')) {
+      return 'Serum';
+    }
+    if (lowerQuery.contains('sunscreen') || lowerQuery.contains('spf')) {
+      return 'Sunscreen';
+    }
+    if (lowerQuery.contains('toner')) {
+      return 'Toner';
+    }
+    if (lowerQuery.contains('mask')) {
+      return 'Face Mask';
+    }
+
+    // Default to Skincare if category can't be determined
+    return 'Skincare';
+  }
+
   static String _extractBrand(String title, String searchQuery) {
     final lowerTitle = title.toLowerCase();
     final lowerQuery = searchQuery.toLowerCase();
 
-    if (lowerTitle.contains('cetaphil') || lowerQuery.contains('cetaphil')) return 'cetaphil';
-    if (lowerTitle.contains('Minimalist Salicylic Acid Face Serum') || lowerQuery.contains('Minimalist Salicylic Acid Face Serum')) return 'Minimalist Salicylic Acid Face Serum';
+    if (lowerTitle.contains('cetaphil') || lowerQuery.contains('cetaphil')) {
+      return 'Cetaphil';
+    }
+    if (lowerTitle.contains('minimalist') || lowerQuery.contains('minimalist')) {
+      return 'Minimalist';
+    }
 
-    // Try to extract brand from title
+    // Try to extract brand from title (first word is usually the brand)
     final words = title.split(' ');
     if (words.isNotEmpty) {
       return words.first;

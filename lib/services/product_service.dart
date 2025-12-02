@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import '../models/product.dart';
 
 class ProductService {
-  static const String _serpApiKey = '25792c6200f22174c1c3d705fd70a3bd59e89dcad439b1c1b00d2e377ccf4b6f';
+  static const String _serpApiKey = 'APIKEY';
   static const String _baseUrl = 'https://serpapi.com/search';
 
   // Predefined product list
